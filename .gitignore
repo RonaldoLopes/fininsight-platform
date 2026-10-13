@@ -218,3 +218,49 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# ---------- Terraform ----------
+.terraform/
+.terraform.lock.hcl.bak
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Valores sensíveis (se criar um tfvars com segredos)
+*.auto.tfvars
+secrets.tfvars
+
+# ---------- Python ----------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# ---------- Databricks ----------
+.databricks/
+.bundle/
+
+# ---------- IDE / SO ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---------- Segredos ----------
+.env
+*.pem
+*.key
