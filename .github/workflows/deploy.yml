@@ -1,0 +1,28 @@
+# Equivalente ao bitbucket-pipelines.yml para quem usa GitHub (este projeto usa Git folder do GitHub).
+name: deploy-databricks
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pytest pandas && pytest tests -q
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: testes
+    runs-on: ubuntu-latest
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@main
+      - run: databricks bundle deploy -t ${{ github.ref_name == 'main' && 'prod' || 'dev' }}

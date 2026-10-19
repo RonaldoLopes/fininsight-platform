@@ -1,0 +1,45 @@
+# bitbucket-pipelines.yml (raiz). Variaveis do repositorio: DATABRICKS_HOST_*, DATABRICKS_CLIENT_ID,
+# DATABRICKS_CLIENT_SECRET (service principal). Nunca coloque tokens no arquivo.
+image: python:3.12
+
+definitions:
+  steps:
+    - step: &instalar-cli
+        name: Instalar Databricks CLI
+        script:
+          - curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+pipelines:
+  branches:
+    develop:
+      - step:
+          name: Deploy DEV
+          deployment: dev
+          script:
+            - curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+            - databricks bundle validate -t dev
+            - databricks bundle deploy -t dev
+    "release/*":
+      - step:
+          name: Deploy HML
+          deployment: staging
+          script:
+            - curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+            - databricks bundle deploy -t hml
+    main:
+      - step:
+          name: Deploy PROD
+          deployment: production
+          trigger: manual
+          script:
+            - curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+            - databricks bundle deploy -t prod
+  pull-requests:
+    "**":
+      - step:
+          name: Validar bundle e testes
+          script:
+            - pip install pytest pandas
+            - pytest tests -q
+            - curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+            - databricks bundle validate -t dev
