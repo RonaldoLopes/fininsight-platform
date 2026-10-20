@@ -20,9 +20,8 @@ module "unity_catalog" {
   location             = var.location
   storage_account_name = module.storage.storage_account_name
   access_connector_id  = module.databricks.access_connector_id
-  metastore_id         = var.metastore_id
 
-  depends_on = [module.storage, module.databricks]
+  depends_on           = [module.storage, module.databricks]
 }
 
 # ---------- Sprint 3 (capitulo de streaming): descomente para ativar o Event Hubs ----------

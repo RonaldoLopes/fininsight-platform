@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.7.0"
   backend "azurerm" {
     resource_group_name  = "rg-tfstate-fininsight"
-    storage_account_name = "tfstatefininsight001"
+    storage_account_name = "tfstatefininsight002"
     container_name       = "tfstate"
     key                  = "fininsight.tfstate"
   }
