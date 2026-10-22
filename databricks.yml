@@ -1,0 +1,105 @@
+# databricks.yml - Databricks Asset Bundle (raiz do repositorio)
+# Comandos:  databricks bundle validate -t dev | deploy -t dev | run fininsight_job_diario -t dev
+bundle:
+  name: fininsight_platform
+
+variables:
+  catalog:
+    description: Catalogo Unity Catalog do ambiente
+    default: fininsight_dev
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      # URL do workspace DEV (output databricks_workspace_url do Terraform)
+      host: https://adb-XXXXXXXXXXXXXXXX.X.azuredatabricks.net
+    variables:
+      catalog: fininsight_dev
+
+  hml:
+    workspace:
+      host: https://adb-HML.azuredatabricks.net
+    variables:
+      catalog: fininsight_hml
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-PROD.azuredatabricks.net
+    variables:
+      catalog: fininsight_prod
+
+resources:
+  pipelines:
+    fininsight_bronze:
+      name: fininsight_bronze_${bundle.target}
+      catalog: ${var.catalog}
+      schema: bronze
+      serverless: true
+      libraries:
+        - glob:
+            include: ./pipelines/bronze/**
+      configuration:
+        fininsight.catalog: ${var.catalog}
+
+    fininsight_silver:
+      name: fininsight_silver_${bundle.target}
+      catalog: ${var.catalog}
+      schema: silver
+      serverless: true
+      libraries:
+        - glob:
+            include: ./pipelines/silver/**
+      configuration:
+        fininsight.catalog: ${var.catalog}
+
+    fininsight_gold:
+      name: fininsight_gold_${bundle.target}
+      catalog: ${var.catalog}
+      schema: gold
+      serverless: true
+      libraries:
+        - glob:
+            include: ./pipelines/gold/**
+      configuration:
+        fininsight.catalog: ${var.catalog}
+
+  jobs:
+    fininsight_job_diario:
+      name: fininsight_job_diario_${bundle.target}
+      tasks:
+        - task_key: coleta_apis
+          notebook_task:
+            notebook_path: ./notebooks/01_coleta_apis.py
+
+        - task_key: bronze
+          depends_on: [{ task_key: coleta_apis }]
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.fininsight_bronze.id}
+
+        - task_key: silver
+          depends_on: [{ task_key: bronze }]
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.fininsight_silver.id}
+
+        - task_key: gold
+          depends_on: [{ task_key: silver }]
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.fininsight_gold.id}
+
+        - task_key: scoring_ml
+          depends_on: [{ task_key: gold }]
+          notebook_task:
+            notebook_path: ./notebooks/05_batch_scoring.py
+
+        - task_key: insights_genai
+          depends_on: [{ task_key: gold }]
+          notebook_task:
+            notebook_path: ./notebooks/06_genai_insights.py
+
+      schedule:
+        quartz_cron_expression: "0 0 7 ? * MON-FRI"
+        timezone_id: America/Sao_Paulo
+        pause_status: PAUSED          # mude para UNPAUSED quando quiser ativar
