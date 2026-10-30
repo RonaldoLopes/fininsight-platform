@@ -1,9 +1,13 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql.functions import current_timestamp
+
+# COMMAND ----------
 
 SCOPE = "fininsight"
 TOPICO = "cotacoes-tempo-real"
 
+# COMMAND ----------
 
 def _opcoes_kafka():
     bootstrap = dbutils.secrets.get(SCOPE, "eventhub-bootstrap")
@@ -20,6 +24,7 @@ def _opcoes_kafka():
         "startingOffsets": "earliest",
     }
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_cotacoes_streaming",

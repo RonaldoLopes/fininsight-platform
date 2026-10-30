@@ -1,14 +1,18 @@
+# Databricks notebook source
+# DBTITLE 1,Imports
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
+# DBTITLE 1,Declarative pipelines
 @dp.table(
     name="bz_bcb_series",
     comment="Series temporais do Banco Central (raw)",
-    table_properties={"quality": "bronze"},
+    table_properties={"quality": "bronze"}
 )
 def bz_bcb_series():
-    return (
+    return(
         spark.readStream.format("cloudFiles")
         .option("cloudFiles.format", "json")
         .option("cloudFiles.inferColumnTypes", "true")

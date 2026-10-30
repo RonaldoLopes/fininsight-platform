@@ -1,6 +1,8 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_noticias_raw",
@@ -15,5 +17,4 @@ def bz_noticias_raw():
         .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
         .load("/Volumes/fininsight_dev/landing/raw/noticias/")
         .withColumn("_ingested_at", current_timestamp())
-        .withColumn("_source_file", col("_metadata.file_path"))
     )

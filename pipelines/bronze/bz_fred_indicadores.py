@@ -1,6 +1,8 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_fred_indicadores",

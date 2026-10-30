@@ -1,11 +1,16 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_yfinance_precos",
     comment="Precos diarios via yfinance (raw)",
-    table_properties={"quality": "bronze"},
+    table_properties={
+        "quality": "bronze",
+        "delta.feature.timestampNtz": "supported",
+    },
 )
 def bz_yfinance_precos():
     return (
