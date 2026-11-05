@@ -30,21 +30,21 @@ module "unity_catalog" {
 #   environment         = var.environment
 #   location            = var.location
 #   resource_group_name = module.storage.resource_group_name
-#
+
 #   depends_on = [module.databricks]
 # }
 
 # ---------- Opcionais (capitulo "Modulos opcionais"): descomente quando quiser ----------
-# module "keyvault" {
-#   source              = "./modules/keyvault"
-#   environment         = var.environment
-#   location            = var.location
-#   resource_group_name = module.storage.resource_group_name
-# }
-#
-# module "ai_services" {
-#   source              = "./modules/ai-services"
-#   environment         = var.environment
-#   location            = var.location
-#   resource_group_name = module.storage.resource_group_name
-# }
+module "keyvault" {
+  source              = "./modules/keyvault"
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = module.storage.resource_group_name
+}
+
+module "ai_services" {
+  source              = "./modules/ai-services"
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = module.storage.resource_group_name
+}
