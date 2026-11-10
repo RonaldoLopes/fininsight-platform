@@ -1,9 +1,11 @@
-# Equivalente ao bitbucket-pipelines.yml para quem usa GitHub (este projeto usa Git folder do GitHub).
+# Equivalente ao bitbucket-pipelines.yml para quem usa GitHub.
+# Este projeto usa apenas o ambiente DEV: qualquer push (develop ou main) implanta em dev.
 name: deploy-databricks
 on:
   push:
     branches: [develop, main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   testes:
@@ -14,15 +16,15 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install pytest pandas && pytest tests -q
 
-  deploy:
-    if: github.event_name == 'push'
+  deploy-dev:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: testes
     runs-on: ubuntu-latest
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
-      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: databricks/setup-cli@main
-      - run: databricks bundle deploy -t ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+      - run: databricks bundle validate -t dev
+      - run: databricks bundle deploy -t dev
