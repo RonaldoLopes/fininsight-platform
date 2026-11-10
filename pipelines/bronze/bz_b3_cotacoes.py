@@ -1,10 +1,12 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_b3_cotacoes",
-    comment="Cotacoes diarias da B3 - COTAHIST (raw)",
+    comment="Cotacoes diarias da B3 - COTAHIST (raw), com tipos fixados",
     table_properties={"quality": "bronze"},
 )
 def bz_b3_cotacoes():
@@ -14,6 +16,8 @@ def bz_b3_cotacoes():
         .option("header", "true")
         .option("cloudFiles.inferColumnTypes", "true")
         .option("cloudFiles.schemaEvolutionMode", "addNewColumns")
+        .option("cloudFiles.schemaHints",
+                "preco_abertura DOUBLE, preco_maximo DOUBLE, preco_minimo DOUBLE, preco_fechamento DOUBLE, volume DOUBLE, data_pregao DATE")
         .load("/Volumes/fininsight_dev/landing/raw/b3/")
         .withColumn("_ingested_at", current_timestamp())
         .withColumn("_source_file", col("_metadata.file_path"))

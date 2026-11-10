@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # MAGIC %md
 # MAGIC # 01 - Coleta de APIs para a landing
 # MAGIC Pré-requisitos: Volume `fininsight_dev.landing.raw` (Terraform) e secrets (notebook 00).
@@ -28,7 +32,7 @@ RAIZ = "/Volumes/fininsight_dev/landing/raw"
 HOJE = date.today()
 SCOPE = "fininsight"
 # Primeira execucao (backfill): "2y". Execucoes diarias: "5d".
-PERIODO_YF = "5d"
+PERIODO_YF = "2y"
 
 
 def segredo(chave):

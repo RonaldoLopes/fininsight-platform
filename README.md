@@ -4,7 +4,7 @@ Financial market data platform on Azure + Databricks — Medallion Architecture 
 
 > Study project for the **Databricks Certified Data Engineer Associate** certification, focused on real-world data engineering applied to financial markets.
 
-**Documentation v3.0** — restructured into **sprints** (each part ends with something running and a checkpoint), using the **new pipelines API** (`from pyspark import pipelines as dp`), COPY INTO, Streaming Tables with `SCHEDULE`/`REFRESH`, Declarative Pipelines and a comparison of the ingestion options. The handbook has **43 chapters** (written in Portuguese).
+**Documentation v3.2** — restructured into **sprints** (each part ends with something running and a checkpoint), using the **new pipelines API** (`from pyspark import pipelines as dp`), COPY INTO, Streaming Tables with `SCHEDULE`/`REFRESH`, Declarative Pipelines and a comparison of the ingestion options. The handbook has **44 chapters** (written in Portuguese); chapter 44 is a market-analysis agent built with an LLM and tools.
 
 ## Table of Contents
 
@@ -70,7 +70,7 @@ Full details, with diagrams, are in the handbook at `docs/Apostila_FinInsight_Da
 | 3 — Ingestion | Schema evolution, COPY INTO, Streaming Table, SQL pipeline, comparison, Event Hubs | 18–23 |
 | 4 — Silver | Delta, financial calculations, join, SCD2, quality | 24–29 |
 | 5 — Gold | Star schema and risk KPIs | 30–33 |
-| 6 — AI/ML and GenAI | Features, models, scoring, insights, RAG | 34–37 |
+| 6 — AI/ML and GenAI | Features, models, scoring, insights, RAG, agent | 34–37, 44 |
 | Operations | Job + bundle, CI/CD, governance, optional modules, troubleshooting | 38–43 |
 
 ## Repository structure
@@ -158,7 +158,8 @@ fininsight-platform/
 │   ├── clusterizacao_ativos.py
 │   └── promover_modelo.py
 ├── genai/
-│   └── vector_search_setup.py
+│   ├── vector_search_setup.py
+│   └── agente_mercado.py                # agent: LLM + tools (Gold KPIs and Vector Search)
 └── tests/
     └── test_formulas_financeiras.py     # pandas reference for the formulas
 ```
@@ -167,7 +168,7 @@ fininsight-platform/
 
 - Azure account with Owner/Contributor permission on the Resource Group(s)
 - Terraform >= 1.7, Azure CLI and VS Code
-- An **existing Unity Catalog metastore** in the region (copy its ID from the Account Console)
+- An active Azure subscription (a brand-new account works: providers are registered in step 1). The **Unity Catalog metastore** is created and attached automatically by Azure when the first workspace in the region is created; there is no ID to copy
 - Databricks CLI (`databricks bundle` — Asset Bundles), for chapter 38
 - Python 3.10+ (local tests) and a GitHub repository (Git folder in Databricks)
 - Free API keys: Alpha Vantage, FRED and NewsAPI (the free tier of some endpoints may be limited)
@@ -176,21 +177,45 @@ fininsight-platform/
 
 ## Provisioning the infrastructure (Terraform)
 
-1. Create the state storage (once), one line per command (PowerShell does not accept `\`):
+1. Sign in to the right account and register the providers (a new account starts without them):
+
+```bash
+az login --use-device-code --tenant YOUR_TENANT_ID
+az account set --subscription YOUR_SUBSCRIPTION_ID
+az account show --query "{user:user.name, subscription:name}" -o json
+az provider register --namespace Microsoft.Storage --wait
+az provider register --namespace Microsoft.Databricks --wait
+az provider register --namespace Microsoft.Authorization
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.CognitiveServices
+az provider register --namespace Microsoft.EventHub
+az provider register --namespace Microsoft.EventGrid
+```
+
+2. Create the state storage (once), one line per command (PowerShell does not accept `\`). The Storage Account name is globally unique; if `002` is taken, change the number and update `infra/backend.tf`:
 
 ```bash
 az group create -n rg-tfstate-fininsight -l eastus2
-az storage account create -n tfstatefininsight001 -g rg-tfstate-fininsight -l eastus2 --sku Standard_LRS --encryption-services blob
-az storage container create -n tfstate --account-name tfstatefininsight001 --auth-mode login
+az storage account create -n tfstatefininsight002 -g rg-tfstate-fininsight -l eastus2 --sku Standard_LRS --encryption-services blob
+az role assignment create --assignee $(az ad signed-in-user show --query id -o tsv) --role "Storage Blob Data Contributor" --scope $(az group show -n rg-tfstate-fininsight --query id -o tsv)
+az storage container create -n tfstate --account-name tfstatefininsight002 --auth-mode login
 ```
 
-2. Fill in `metastore_id` in `infra/envs/dev/terraform.tfvars` and apply (only storage, databricks and unity-catalog are active in `main.tf`):
+In PowerShell, store the results in variables (`$me = az ad signed-in-user show --query id -o tsv` and `$rg = az group show -n rg-tfstate-fininsight --query id -o tsv`) and use `--assignee $me --scope $rg`. The role can take 1-2 minutes to take effect: if `container create` returns 403, wait and retry.
+
+3. Apply in **two phases** (only storage, databricks and unity-catalog are active in `main.tf`). There is no `metastore_id` to fill in: the new workspace is already attached to the region's metastore.
 
 ```bash
 cd infra
-terraform init
+terraform init -reconfigure
 terraform validate
-terraform plan -var-file="envs/dev/terraform.tfvars" -out=plan.out
+terraform apply -var-file="envs/dev/terraform.tfvars" '-target=module.databricks'
+```
+
+Check in *Launch Workspace > Catalog* that the workspace has a metastore attached. Then apply the rest (Unity Catalog, catalog, schemas, volume):
+
+```bash
+terraform plan -var-file="envs/dev/terraform.tfvars" '-out=plan.out'
 terraform apply plan.out
 ```
 
@@ -261,6 +286,7 @@ The Silver layer performs **full financial calculations**: logarithmic return, m
 - Daily insights via `ai_query` (Foundation Model API) stored in `gold.fato_insights_genai`
 - News summarization and sentiment via `ai_summarize` / `ai_classify`
 - RAG over news with Databricks Vector Search; optional Azure OpenAI (Terraform module)
+- Market-analysis agent (`genai/agente_mercado.py`): the LLM chooses between querying the Gold risk KPIs (parameterized SQL) and searching news in Vector Search, then writes the final answer
 
 ## CI/CD
 
@@ -295,6 +321,6 @@ Files for Bitbucket Pipelines and GitHub Actions are included, authenticating wi
 
 ## Full documentation
 
-The detailed step-by-step (43 chapters: infrastructure, ingestion, pipelines, modeling, AI/ML, GenAI, governance and
+The detailed step-by-step (44 chapters: infrastructure, ingestion, pipelines, modeling, AI/ML, GenAI, governance and
 troubleshooting with every real error) is in **`docs/Apostila_FinInsight_Databricks_Azure.pdf`** (Portuguese), with a clickable
 table of contents and bookmarks per chapter.

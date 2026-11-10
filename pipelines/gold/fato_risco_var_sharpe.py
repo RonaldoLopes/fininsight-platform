@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
 CAT = spark.conf.get("fininsight.catalog", "fininsight_dev")
-MIN_OBS = 20      # minimo de retornos na janela para as metricas fazerem sentido
+MIN_OBS = 5      # minimo de retornos na janela para as metricas fazerem sentido
 Z_95 = 1.645      # quantil da normal padrao para 95% de confianca
 
 

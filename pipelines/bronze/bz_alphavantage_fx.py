@@ -1,6 +1,12 @@
+# Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 from pyspark import pipelines as dp
 from pyspark.sql.functions import col, current_timestamp
 
+# COMMAND ----------
 
 @dp.table(
     name="bz_alphavantage_fx",
