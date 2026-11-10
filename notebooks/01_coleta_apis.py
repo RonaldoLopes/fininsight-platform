@@ -1,7 +1,6 @@
 # Databricks notebook source
 # /// script
 # [tool.databricks.environment]
-# base_environment = "databricks_ai_v6"
 # environment_version = "6"
 # ///
 # MAGIC %md
@@ -33,7 +32,7 @@ RAIZ = "/Volumes/fininsight_dev/landing/raw"
 HOJE = date.today()
 SCOPE = "fininsight"
 # Primeira execucao (backfill): "2y". Execucoes diarias: "5d".
-PERIODO_YF = "5d"
+PERIODO_YF = "2y"
 
 
 def segredo(chave):

@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # MAGIC %md
 # MAGIC # 02 - Producer de cotações simuladas (Event Hubs via protocolo Kafka)
 # MAGIC Envia lotes de cotações sintéticas para o tópico `cotacoes-tempo-real`.

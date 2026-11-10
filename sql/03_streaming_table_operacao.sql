@@ -19,3 +19,8 @@ ALTER STREAMING TABLE fininsight_dev.bronze.bz_b3_cotacoes_sql DROP SCHEDULE;
 
 -- ver o que foi criado: pipeline dedicado e agendamento
 DESCRIBE EXTENDED fininsight_dev.bronze.bz_b3_cotacoes_sql;
+
+-- Retirando o agendamento devido a custos
+-- ALTER STREAMING TABLE fininsight_dev.bronze.bz_b3_cotacoes_sql DROP SCHEDULE;
+
+

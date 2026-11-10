@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # MAGIC %md
 # MAGIC # 06 - Insights diarios em linguagem natural (grava `gold.fato_insights_genai`)
 

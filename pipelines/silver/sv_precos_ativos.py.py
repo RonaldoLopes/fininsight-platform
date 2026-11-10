@@ -1,10 +1,14 @@
+# Databricks notebook source
 from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
-CAT = spark.conf.get("fininsight.catalog", "fininsight_dev")
-WATCHLIST = ["PETR4.SA", "VALE3.SA", "ITUB4.SA"]   # tickers da B3 que acompanhamos
+# COMMAND ----------
 
+CAT = spark.conf.get("fininsight.catalog", "fininsight_dev")
+WATCHLIST = ["PETR4.SA", "VALE3.SA", "ITUB4.SA"] # tickers da B3 que acompanhamos
+
+# COMMAND ----------
 
 @dp.materialized_view(
     name="sv_precos_ativos",
