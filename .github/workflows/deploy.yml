@@ -1,5 +1,7 @@
 # Equivalente ao bitbucket-pipelines.yml para quem usa GitHub.
-# Este projeto usa apenas o ambiente DEV: qualquer push (develop ou main) implanta em dev.
+# O código chega ao Databricks via Git folder (pull), então o deploy do bundle fica desativado.
+# Para ativar: descomente o job deploy-dev, crie os secrets DATABRICKS_HOST e DATABRICKS_TOKEN
+# no GitHub e coloque a URL real do workspace no target dev do databricks.yml.
 name: deploy-databricks
 on:
   push:
@@ -16,15 +18,15 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install pytest pandas && pytest tests -q
 
-  deploy-dev:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: testes
-    runs-on: ubuntu-latest
-    env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: databricks/setup-cli@main
-      - run: databricks bundle validate -t dev
-      - run: databricks bundle deploy -t dev
+  # deploy-dev:
+  #   if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+  #   needs: testes
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+  #     DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: databricks/setup-cli@main
+  #     - run: databricks bundle validate -t dev
+  #     - run: databricks bundle deploy -t dev
